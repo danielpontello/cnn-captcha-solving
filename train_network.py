@@ -1,25 +1,41 @@
+import plaidml.keras
+plaidml.keras.install_backend()
+
 import cv2
 import glob
 import random
+import coloredlogs
+import logging
 
 import numpy as np
+from keras.optimizers import Adam, SGD
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
+from keras.preprocessing.image import img_to_array
 from network_model import NetworkModel
+from time import time
+
+coloredlogs.install(level='DEBUG')
 
 # fixamos a seed para manter os resultados reproduzíveis
-random.seed(1337)
+random.seed(71)
+
+EPOCHS = 25
+INIT_LR = 1e-3
+BS = 32
 
 data = []
 labels = []
 
 filenames = glob.glob("captchas/*.png")
+random.shuffle(filenames)
 
 def encode(number):
     numlist = list(str(number))
 
     encoded = []
     for num in numlist:
-        arr = np.zeros((10,), dtype=int)
+        arr = np.zeros((10,), dtype="uint8")
         arr[int(num)] = 1
         encoded.extend(arr)
     return encoded
@@ -29,22 +45,38 @@ with open("captchas/labels.txt", "r") as label_file:
     raw_labels = label_file.read().split("\n")
 
     # converte cada captcha para uma representação binária
-    for label in raw_labels:
+    for label in raw_labels[:8000]:
         enc_label = encode(label)
         labels.append(enc_label)
 
-print("carregando imagens")
-for file in filenames:
+print("carregando imagens...")
+for file in filenames[:8000]:
     image = cv2.imread(file)
+    image = img_to_array(image)
     data.append(image)
 
-data = np.array(data, dtype="float") / 255.0
+# as imagens são normalizadas para um range de [0:1]
+print("normalizando imagens...")
+data = np.array(data, dtype="float32") / 255.0
 labels = np.array(labels)
 
-print(data.shape)
+print(len(data))
+print(len(labels))
 
-print("carregando modelo")
+(trainX, testX, trainY, testY) = train_test_split(data,	labels, test_size=0.25, random_state=42)
+
+print("carregando modelo...")
 model = NetworkModel.build(140, 80, 3, 4, 10)
 
-model.fit(data, labels, batch_size=400, epochs=20, validation_split=0.1)
+# resumo do modelo
+model.summary()
+
+print("treinando modelo...")
+
+opt = Adam(lr=INIT_LR, decay=INIT_LR / EPOCHS)
+
+model.compile(loss='categorical_crossentropy', 
+                optimizer=opt, 
+                metrics=['accuracy'])
+model.fit(trainX, trainY, validation_data=(testX, testY), batch_size=BS, epochs=EPOCHS, verbose=1)
 model.save('model.mdl')

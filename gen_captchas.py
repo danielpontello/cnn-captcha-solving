@@ -11,16 +11,17 @@ def generate(width,height,num_char):
     image = generator.generate_image(rand_str)
     return (image,rand_str)
 
-save_dir = 'captchas/'
+save_dir = 'test-captchas/'
 labels = []
 
-for i in range(5000):
+for i in range(500):
     if i % 100 == 0:
-        print(i, "de 5000 captchas gerados")
+        print(i, "de 25000 captchas gerados")
     
     img, char = generate(140,80,4)
     plt.imsave(save_dir+str(i) + ".png",np.array(img))
     labels.append(char)
+
 with open(save_dir + 'labels.txt','w') as f:
     for lb in labels:
         f.write('%s\n' % lb)
