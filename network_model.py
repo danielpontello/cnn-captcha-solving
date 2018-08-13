@@ -24,19 +24,19 @@ class NetworkModel:
             inputShape = (depth, height, width)
 
         # Primeiro bloco 
-        model.add(Conv2D(16, (3, 3), input_shape=inputShape))
+        model.add(Conv2D(32, (3, 3), input_shape=inputShape))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(2))
         model.add(Dropout(0.1))
 
         # Segundo bloco
-        model.add(Conv2D(32, (3, 3)))
+        model.add(Conv2D(64, (3, 3)))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(2))
         model.add(Dropout(0.1))
 
         # Terceiro Bloco
-        model.add(Conv2D(64, (3, 3)))
+        model.add(Conv2D(128, (3, 3)))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(2))
         model.add(Dropout(0.1))
@@ -47,11 +47,11 @@ class NetworkModel:
         model.add(Activation('relu'))
         model.add(Dropout(0.25))
 
-        model.add(Dense(32*numchars))
+        model.add(Dense(64*numchars))
         model.add(Activation('relu'))
         model.add(Dropout(0.25))
 
         model.add(Dense(numchars*possiblechars))
-        model.add(Activation('softmax'))
+        model.add(Activation('sigmoid'))
         
         return model

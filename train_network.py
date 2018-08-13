@@ -3,6 +3,7 @@ plaidml.keras.install_backend()
 
 import cv2
 import glob
+import os
 import random
 import coloredlogs
 import logging
@@ -22,13 +23,20 @@ random.seed(71)
 
 EPOCHS = 25
 INIT_LR = 1e-3
-BS = 32
+BS = 16
+
+kernel = (5, 5)
+level = 4
 
 data = []
 labels = []
 
+def sortKeyFunc(s):
+    return int(os.path.basename(s)[:-4])
+
 filenames = glob.glob("captchas/*.png")
-random.shuffle(filenames)
+filenames.sort(key=sortKeyFunc)
+print(filenames)
 
 def encode(number):
     numlist = list(str(number))
@@ -49,9 +57,13 @@ with open("captchas/labels.txt", "r") as label_file:
         enc_label = encode(label)
         labels.append(enc_label)
 
+
 print("carregando imagens...")
 for file in filenames[:8000]:
-    image = cv2.imread(file)
+    image = cv2.imread(file, 0)
+    ret, image = cv2.threshold(image, 211, 255, cv2.THRESH_BINARY_INV)
+    image = cv2.erode(image, kernel, iterations = level)
+    image = cv2.dilate(image, kernel, iterations = level)
     image = img_to_array(image)
     data.append(image)
 
@@ -60,13 +72,10 @@ print("normalizando imagens...")
 data = np.array(data, dtype="float32") / 255.0
 labels = np.array(labels)
 
-print(len(data))
-print(len(labels))
-
 (trainX, testX, trainY, testY) = train_test_split(data,	labels, test_size=0.25, random_state=42)
 
 print("carregando modelo...")
-model = NetworkModel.build(140, 80, 3, 4, 10)
+model = NetworkModel.build(140, 80, 1, 4, 10)
 
 # resumo do modelo
 model.summary()
@@ -76,7 +85,7 @@ print("treinando modelo...")
 opt = Adam(lr=INIT_LR, decay=INIT_LR / EPOCHS)
 
 model.compile(loss='categorical_crossentropy', 
-                optimizer=opt, 
+                optimizer='adam', 
                 metrics=['accuracy'])
 model.fit(trainX, trainY, validation_data=(testX, testY), batch_size=BS, epochs=EPOCHS, verbose=1)
 model.save('model.mdl')
