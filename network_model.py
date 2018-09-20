@@ -23,35 +23,28 @@ class NetworkModel:
         if K.image_data_format() == "channels_first":
             inputShape = (depth, height, width)
 
-        # Primeiro bloco 
-        model.add(Conv2D(32, (3, 3), input_shape=inputShape))
+        model.add(Conv2D(32, (3, 3), padding='valid', input_shape=inputShape))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(2))
-        model.add(Dropout(0.1))
+        model.add(Dropout(0.25))
 
-        # Segundo bloco
         model.add(Conv2D(64, (3, 3)))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(2))
-        model.add(Dropout(0.1))
+        model.add(Dropout(0.25))
 
-        # Terceiro Bloco
-        model.add(Conv2D(128, (3, 3)))
+        model.add(Conv2D(64, (3, 3)))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(2))
-        model.add(Dropout(0.1))
+        model.add(Dropout(0.25))
 
-        # Camada conectada
+        # Fully connected layer
         model.add(Flatten())
-        model.add(Dense(64*numchars))
+        model.add(Dense(1024*numchars))
+        model.add(Dense(512*numchars))
         model.add(Activation('relu'))
         model.add(Dropout(0.25))
-
-        model.add(Dense(64*numchars))
-        model.add(Activation('relu'))
-        model.add(Dropout(0.25))
-
         model.add(Dense(numchars*possiblechars))
-        model.add(Activation('sigmoid'))
+        model.add(Activation('softmax'))
         
         return model
