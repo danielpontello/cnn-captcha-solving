@@ -5,16 +5,35 @@ import pytesseract
 import string
 
 from PIL import Image
+from os import listdir, makedirs
+from collections import defaultdict
+from os.path import join, isdir, splitext
 
+# parâmetros do blur
 kernel = (3, 3)
 level = 2
-tess_config = "-oem 0 -c tessedit_char_whitelist=" + string.ascii_lowercase + string.digits
 
-print(tess_config)
+# caminho do dataset
+raw_path = "../dataset/raw/"
+seg_path = "../dataset/segmented/"
 
-for i in range(1, 185):
-    num = str(i).zfill(5)
-    image = cv2.imread("raw-images/" + num + ".png", 0)
+allowed_chars = string.ascii_lowercase + string.digits
+
+if not isdir(seg_path):
+    makedirs(seg_path)
+
+    for i in allowed_chars:
+        makedirs(seg_path + "/" + i)
+
+files = listdir(raw_path)
+
+counts = defaultdict(int)
+
+for file in files:
+    image = cv2.imread(raw_path + file, 0)
+    letters = splitext(file)[0]
+
+    print(letters)
 
     # blur
     k = np.ones((5,5),np.float32)/25
@@ -24,6 +43,9 @@ for i in range(1, 185):
     ret, image = cv2.threshold(dst, 110, 255, cv2.THRESH_BINARY_INV)
     image = cv2.erode(image, kernel, iterations = level)
 
+    # plt.imshow(image)
+    # plt.show()
+
     connectivity = 4
     output = cv2.connectedComponentsWithStats(image, connectivity, cv2.CV_32S)
 
@@ -32,25 +54,53 @@ for i in range(1, 185):
     stats = output[2]
     centroids = output[3]
 
+    objects = []
+
     for i in range(1, num_labels):
         a = stats[i, cv2.CC_STAT_AREA]
 
+        # remove pequenos ruídos
         if a > 50:
             x = stats[i, cv2.CC_STAT_LEFT]
             y = stats[i, cv2.CC_STAT_TOP]
             w = stats[i, cv2.CC_STAT_WIDTH]
             h = stats[i, cv2.CC_STAT_HEIGHT]
 
-            letter = image[y:y+h, x:x+w]
+            objects.append((x, y, w, h))
 
-            rgb = cv2.cvtColor(letter, cv2.COLOR_GRAY2RGB)
-            pil_img = Image.fromarray(rgb)
+    objects.sort(key=lambda t: t[0])
 
-            res = pytesseract.image_to_string(pil_img, config=tess_config)
-            print(res)
+    num_detected = min(len(objects), 4)
 
-            plt.imshow(rgb)
-            plt.show()
+    for i in range(num_detected):
+        o = objects[i]
+        x = o[0]
+        y = o[1]
+        w = o[2]
+        h = o[3]
+
+        img = image[y:y+h, x:x+w]
+        rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
+        letter = letters[i]
+
+        filename = "/" + str(counts[letter]).zfill(5) + ".png"
+
+        path = seg_path + letter + "/" + filename
+        cv2.imwrite(path, img)
+        counts[letter] += 1
+
+
+            #letter = image[y:y+h, x:x+w]
+
+            #rgb = cv2.cvtColor(letter, cv2.COLOR_GRAY2RGB)
+            #pil_img = Image.fromarray(rgb)
+
+            #res = pytesseract.image_to_string(pil_img, config=tess_config)
+            #print(res)
+
+            #plt.imshow(rgb)
+            #plt.show()
     
     # The second cell is the label matrix
     #labels = output[1]
