@@ -28,7 +28,9 @@ seg_path = "../dataset/segmented/"
 # épocas
 EPOCHS = 64
 # taxa de aprendizado
-INIT_LR = 1e-3
+LR = 0.1
+# decay
+DECAY = 1e-6
 # tamanho do batch
 BS = 128
 
@@ -84,10 +86,10 @@ model.summary()
 
 print("Treinando modelo...")
 
-opt = Adam(lr=INIT_LR, decay=INIT_LR / EPOCHS)
+sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
 
 model.compile(loss='categorical_crossentropy', 
-                optimizer='adadelta', 
+                optimizer=sgd, 
                 metrics=['accuracy'])
                 
 model.fit(trainX, trainY, validation_data=(testX, testY), batch_size=BS, epochs=EPOCHS, verbose=1)

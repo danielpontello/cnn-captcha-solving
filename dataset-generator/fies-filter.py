@@ -33,8 +33,6 @@ for file in files:
     image = cv2.imread(raw_path + file, 0)
     letters = splitext(file)[0]
 
-    print(letters)
-
     # blur
     k = np.ones((5,5),np.float32)/25
     dst = cv2.filter2D(image,-1,k)
@@ -42,9 +40,6 @@ for file in files:
     # threshold
     ret, image = cv2.threshold(dst, 110, 255, cv2.THRESH_BINARY_INV)
     image = cv2.erode(image, kernel, iterations = level)
-
-    # plt.imshow(image)
-    # plt.show()
 
     connectivity = 4
     output = cv2.connectedComponentsWithStats(image, connectivity, cv2.CV_32S)
