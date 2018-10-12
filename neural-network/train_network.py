@@ -5,6 +5,7 @@ import cv2
 import glob
 import os
 import random
+import string
 import coloredlogs
 import logging
 
@@ -21,65 +22,67 @@ coloredlogs.install(level='DEBUG')
 # fixamos a seed para manter os resultados reproduzíveis
 random.seed(71)
 
-EPOCHS = 15
+# caminho dos dados
+seg_path = "../dataset/segmented/"
+
+# épocas
+EPOCHS = 64
+# taxa de aprendizado
 INIT_LR = 1e-3
+# tamanho do batch
 BS = 128
 
+# parametros do filtro
 kernel = (5, 5)
 level = 4
+
+# caracteres permitidos
+allowed_chars = string.ascii_lowercase + string.digits
 
 data = []
 labels = []
 
-def sortKeyFunc(s):
-    return int(os.path.basename(s)[:-4])
+def encode(char):
+    arr = np.zeros((len(allowed_chars),), dtype="uint8")
+    index = allowed_chars.index(char)
+    arr[index] = 1
+    return arr
 
-filenames = glob.glob("captchas/*.png")
-filenames.sort(key=sortKeyFunc)
+print("Carregando dataset...")
 
-def encode(number):
-    numlist = list(str(number))
+for char in allowed_chars:
+    print(f"Carregando dados do caractere '{char}'")
 
-    encoded = []
-    for num in numlist:
-        arr = np.zeros((10,), dtype="uint8")
-        arr[int(num)] = 1
-        encoded.extend(arr)
-    return encoded
+    path = seg_path + char + "/"
+    files = os.listdir(path)
 
-print("carregando labels...")
-with open("captchas/labels.txt", "r") as label_file:
-    raw_labels = label_file.read().split("\n")
+    for file in files:
+        image = cv2.imread(path + file)
+        resized = cv2.resize(image, (30, 30))
 
-    # converte cada captcha para uma representação binária
-    for label in raw_labels[:25000]:
-        enc_label = encode(label)
-        labels.append(enc_label)
+        label = encode(char)
 
+        data.append(resized)
+        labels.append(label)
 
-print("carregando imagens...")
-for file in filenames[:25000]:
-    image = cv2.imread(file)
-    # ret, image = cv2.threshold(image, 211, 255, cv2.THRESH_BINARY_INV)
-    # image = cv2.erode(image, kernel, iterations = level)
-    # image = cv2.dilate(image, kernel, iterations = level)
-    image = img_to_array(image)
-    data.append(image)
+print(f"{str(len(data))} amostras carregadas")
 
 # as imagens são normalizadas para um range de [0:1]
-print("normalizando imagens...")
+print("Normalizando amostras...")
+
 data = np.array(data, dtype="float32") / 255.0
 labels = np.array(labels)
 
+print("Separando dados em treino e teste...")
 (trainX, testX, trainY, testY) = train_test_split(data,	labels, test_size=0.25, random_state=42)
 
-print("carregando modelo...")
-model = NetworkModel.build(140, 80, 3, 4, 10)
+print("Carregando modelo...")
+model = NetworkModel.build(30, 30, 3, len(allowed_chars))
 
 # resumo do modelo
 model.summary()
 
-print("treinando modelo...")
+print("Treinando modelo...")
 
 opt = Adam(lr=INIT_LR, decay=INIT_LR / EPOCHS)
 
@@ -88,4 +91,6 @@ model.compile(loss='categorical_crossentropy',
                 metrics=['accuracy'])
                 
 model.fit(trainX, trainY, validation_data=(testX, testY), batch_size=BS, epochs=EPOCHS, verbose=1)
+
+print("Salvando modelo resultante...")
 model.save('model.mdl')

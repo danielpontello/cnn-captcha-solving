@@ -108,3 +108,6 @@ captchas/
 test-captchas/
 dataset/
 .vscode/
+
+# modelo
+neural-network/model.mdl

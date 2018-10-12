@@ -13,7 +13,7 @@ from keras import backend as K
 
 class NetworkModel:
     @staticmethod
-    def build(width, height, depth, numchars, possiblechars):
+    def build(width, height, depth, out_size):
         # cria o modelo
         model = Sequential()
         inputShape = (height, width, depth)
@@ -33,18 +33,18 @@ class NetworkModel:
         model.add(MaxPooling2D(2))
         model.add(Dropout(0.25))
 
-        model.add(Conv2D(64, (3, 3)))
+        model.add(Conv2D(128, (3, 3)))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(2))
         model.add(Dropout(0.25))
 
         # Fully connected layer
         model.add(Flatten())
-        model.add(Dense(1024*numchars))
-        model.add(Dense(512*numchars))
+        model.add(Dense(1024))
+        model.add(Dense(512))
         model.add(Activation('relu'))
         model.add(Dropout(0.25))
-        model.add(Dense(numchars*possiblechars))
+        model.add(Dense(out_size))
         model.add(Activation('softmax'))
         
         return model
