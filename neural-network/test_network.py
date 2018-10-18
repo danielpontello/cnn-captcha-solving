@@ -25,7 +25,7 @@ level = 2
 raw_path = "../dataset/raw/"
 seg_path = "../dataset/segmented/"
 tst_path = "../dataset/test/"
-res_path = "../results/inference/"
+res_path = "../results/"
 
 allowed_chars = string.ascii_lowercase + string.digits
 
