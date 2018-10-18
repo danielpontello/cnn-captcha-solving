@@ -28,7 +28,7 @@ seg_path = "../dataset/segmented/"
 # épocas
 EPOCHS = 64
 # taxa de aprendizado
-LR = 0.1
+LR = 1e-3
 # decay
 DECAY = 1e-6
 # tamanho do batch
@@ -58,7 +58,7 @@ for char in allowed_chars:
     path = seg_path + char + "/"
     files = os.listdir(path)
 
-    for file in files:
+    for file in files[:2000]:
         image = cv2.imread(path + file)
         resized = cv2.resize(image, (30, 30))
 
@@ -72,11 +72,11 @@ print(f"{str(len(data))} amostras carregadas")
 # as imagens são normalizadas para um range de [0:1]
 print("Normalizando amostras...")
 
-data = np.array(data, dtype="float32") / 255.0
+data = np.array(data, dtype="float") / 255.0
 labels = np.array(labels)
 
 print("Separando dados em treino e teste...")
-(trainX, testX, trainY, testY) = train_test_split(data,	labels, test_size=0.25, random_state=42)
+(trainX, testX, trainY, testY) = train_test_split(data,	labels, test_size=0.5, random_state=42)
 
 print("Carregando modelo...")
 model = NetworkModel.build(30, 30, 3, len(allowed_chars))
@@ -86,7 +86,7 @@ model.summary()
 
 print("Treinando modelo...")
 
-sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=LR)
 
 model.compile(loss='categorical_crossentropy', 
                 optimizer=sgd, 

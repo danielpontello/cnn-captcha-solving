@@ -1,3 +1,6 @@
+import plaidml.keras
+plaidml.keras.install_backend()
+
 import numpy as np
 import argparse
 import imutils
@@ -81,6 +84,9 @@ for file in files:
 
         img = image[y:y+h, x:x+w]
         rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        
+        # plt.imshow(rgb)
+        # plt.show()
         
         rgb = cv2.resize(rgb, (30, 30))
         rgb = rgb.astype("float32") / 255.0
