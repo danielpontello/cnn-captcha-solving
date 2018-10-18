@@ -1,6 +1,7 @@
 import plaidml.keras
 plaidml.keras.install_backend()
 
+
 import numpy as np
 import argparse
 import imutils
@@ -12,6 +13,7 @@ from os import listdir
 from os.path import splitext
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
+from difflib import SequenceMatcher
 
 import matplotlib.pyplot as plt
 
@@ -23,8 +25,12 @@ level = 2
 raw_path = "../dataset/raw/"
 seg_path = "../dataset/segmented/"
 tst_path = "../dataset/test/"
+res_path = "../results/inference/"
 
 allowed_chars = string.ascii_lowercase + string.digits
+
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
 
 def decode(array):
     index = np.argmax(array)
@@ -35,11 +41,33 @@ files = listdir(tst_path)
 right = 0
 total = 1
 
+# log html
+page_header = '''
+ <html>
+ <body style='font-family: Arial'>
+ <table border='1' align='center'>
+  <tr>
+    <th>CAPTCHA</th>
+    <th>Esperado</th>
+    <th>Inferido</th>
+    <th>Taxa de Acerto</th>
+  </tr>
+'''
+
+page_footer = '''
+</table>
+</body>
+</html>
+'''
+
 print("Carregando modelo...")
 model = load_model('model.mdl')
 
+data = []
+
 for file in files:
-    image = cv2.imread(tst_path + file, 0)
+    fullpath = tst_path + file
+    image = cv2.imread(fullpath, 0)
     expected = splitext(file)[0]
 
     # blur
@@ -102,41 +130,27 @@ for file in files:
         right += 1
     total += 1
 
-    print(f"Expected: {expected}")
-    print(f"Inferred: {final_str}")
-    print(f"Right: {right}/{total} ({right/total}%)")
+    acc = similar(expected, final_str)
 
-'''
+    data.append([fullpath, expected, final_str, acc])
 
+    #print(f"Expected: {expected}")
+    #print(f"Inferred: {final_str}")
+    #print(f"Accuracy: {str(similar(expected, final_str))}")
+    #print(f"Right: {right}/{total} ({str((right/total)*100)[:5]}%)")
 
-image = cv2.imread(sys.argv[1], 0)
-#ret, image = cv2.threshold(image, 211, 255, cv2.THRESH_BINARY_INV)
-#image = cv2.erode(image, kernel, iterations = level)
-#image = cv2.dilate(image, kernel, iterations = level)
-image = img_to_array(image)
-image = image.astype("float") / 255.0
-image = np.expand_dims(image, axis=0)
-print(image.shape)
+with open(res_path + "results.html", "w") as html:
+    html.write(page_header)
 
-model = load_model('model.mdl')
-res = model.predict(image)
+    for line in data:
+        acc = line[3]
 
-def plot_res(res):        
-    x = list(range(10))
-    plt.subplot(221)
-    plt.plot(x, res[0][0:10])
-    plt.title("Dígito 1")
-    plt.subplot(222)
-    plt.plot(x, res[0][10:20])
-    plt.title("Dígito 2")
-    plt.subplot(223)
-    plt.plot(x, res[0][20:30])
-    plt.title("Dígito 3")
-    plt.subplot(224)
-    plt.plot(x, res[0][30:40])
-    plt.title("Dígito 4")
-    plt.show()
-
-print(decode(res[0][0:10]), decode(res[0][10:20]), decode(res[0][20:30]), decode(res[0][30:40]))
-plot_res(res)
-'''
+        if acc >= 0.75:
+            tr = "<tr style='color:green;'>"
+        elif acc >= 0.5:
+            tr = "<tr style='color:orange;'>"
+        else:
+            tr = "<tr style='color:red;'>"
+        html_str = tr + f"<td><img src='{'../' + line[0]}'></td><td style='font-family: monospace; font-size: 32px; color:black;'>{line[1]}</td><td style='font-family: monospace; font-size: 32px;'>{line[2][:4]}</td><td style='color:black;'>{str(acc*100)[:5]}%</td></tr>"
+        html.write(html_str)
+    html.write(page_footer)
