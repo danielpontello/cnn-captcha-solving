@@ -1,9 +1,9 @@
-pytesseract==0.1.7
-plaidml==0.3.4
-coloredlogs==10.0
-matplotlib==2.0.0
-imutils==0.4.6
-numpy==1.14.1
 Keras==2.0.8
+pytesseract==0.1.7
+numpy==1.14.1
+plaidml==0.3.4
+imutils==0.4.6
+matplotlib==2.0.0
+coloredlogs==10.0
 Pillow==5.3.0
 scikit_learn==0.20.0

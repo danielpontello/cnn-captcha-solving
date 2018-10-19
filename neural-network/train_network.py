@@ -6,93 +6,119 @@ import glob
 import os
 import random
 import string
-import coloredlogs
 import logging
+import time
 
 import numpy as np
 from keras.optimizers import Adam, SGD
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from keras.preprocessing.image import img_to_array
+from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from network_model import NetworkModel
-from time import time
 
-coloredlogs.install(level='DEBUG')
-
+# CONSTANTES ============================================
 # fixamos a seed para manter os resultados reproduzíveis
 random.seed(71)
 
-# caminho dos dados
-seg_path = "../dataset/segmented/"
-
-# épocas
-EPOCHS = 64
-# taxa de aprendizado
-LR = 1e-3
-# decay
-DECAY = 1e-6
-# tamanho do batch
-BS = 128
-
-# parametros do filtro
-kernel = (5, 5)
-level = 4
-
-# caracteres permitidos
+# caracteres permitidos no CAPTCHA
 allowed_chars = string.ascii_lowercase + string.digits
 
-data = []
-labels = []
-
 def encode(char):
+    '''Converte um caractere para uma representação one-hot'''
     arr = np.zeros((len(allowed_chars),), dtype="uint8")
     index = allowed_chars.index(char)
     arr[index] = 1
     return arr
 
-print("Carregando dataset...")
+def load_dataset(num):
+    '''Carrega os dados e os rótulos de cada letra em dois vetores,
+    data e labels. O parâmetro num limita quantas amostras de cada
+    letra devem ser carregadas, para reduzir o uso de memória.'''
+    # caminho dos dados
+    seg_path = "../dataset/segmented/"
 
-for char in allowed_chars:
-    print(f"Carregando dados do caractere '{char}'")
+    data = []
+    labels = []
 
-    path = seg_path + char + "/"
-    files = os.listdir(path)
+    for char in allowed_chars:
+        print(f"Carregando dados do caractere '{char}'")
 
-    for file in files[:2000]:
-        image = cv2.imread(path + file)
-        resized = cv2.resize(image, (30, 30))
+        path = seg_path + char + "/"
+        files = os.listdir(path)
 
-        label = encode(char)
+        for file in files[:num]:
+            image = cv2.imread(path + file)
+            resized = cv2.resize(image, (30, 30))
 
-        data.append(resized)
-        labels.append(label)
+            label = encode(char)
 
-print(f"{str(len(data))} amostras carregadas")
+            data.append(resized)
+            labels.append(label)
+    return data, labels
 
-# as imagens são normalizadas para um range de [0:1]
-print("Normalizando amostras...")
+def normalize_samples(data, labels):
+    '''Normaliza as imagens, de um intervalo [0-255] para [0-1]
+    e converte os dados para o formato NumPy'''
+    n_data = np.array(data, dtype="float") / 255.0
+    n_labels = np.array(labels)
+    return n_data, n_labels
 
-data = np.array(data, dtype="float") / 255.0
-labels = np.array(labels)
+def train_network(train_x, train_y, validation_x, validation_y, epochs, learning_rate, batch_size, model_name):
+    '''Treina a rede neural, salvando o histórico num .csv'''
+    
+    # caminho para salvar os modelos e os resultados
+    mod_path = "../models/" + model_name + "/"
 
-print("Separando dados em treino e teste...")
-(trainX, testX, trainY, testY) = train_test_split(data,	labels, test_size=0.5, random_state=42)
+    if not os.path.isdir(mod_path):
+        os.makedirs(mod_path)
 
-print("Carregando modelo...")
-model = NetworkModel.build(30, 30, 3, len(allowed_chars))
+    # otimização: descida de gradiente estocástica
+    sgd = SGD(lr=learning_rate)
 
-# resumo do modelo
-model.summary()
-
-print("Treinando modelo...")
-
-sgd = SGD(lr=LR)
-
-model.compile(loss='categorical_crossentropy', 
+    # compila o modelo da rede neural (definido em network_model)
+    model = NetworkModel.build(30, 30, 3, len(allowed_chars))
+    model.compile(loss='categorical_crossentropy', 
                 optimizer=sgd, 
                 metrics=['accuracy'])
-                
-model.fit(trainX, trainY, validation_data=(testX, testY), batch_size=BS, epochs=EPOCHS, verbose=1)
 
-print("Salvando modelo resultante...")
-model.save('model.mdl')
+    # callback para salvamento dos dados em .csv
+    csv_logger = CSVLogger(mod_path + f'results.csv', separator=";")
+
+    # callback para salvar sempre o melhor modelo
+    checkpoint = ModelCheckpoint(filepath=mod_path + f'model.hdf5', 
+                monitor='val_acc', 
+                verbose=1, 
+                save_best_only=True)
+
+    # treinamento
+    model.fit(train_x, train_y, 
+                validation_data=(validation_x, validation_y), 
+                batch_size=batch_size, 
+                epochs=epochs, 
+                verbose=1,
+                callbacks=[checkpoint, csv_logger])
+
+if __name__ == "__main__":
+    num_samples = 2000
+    epochs = 2
+    learning_rate = 1e-3
+    batch_size = 128
+    validation_split=0.66
+
+    print("Carregando dataset...")
+    data, labels = load_dataset(num_samples)
+
+    print("Normalizando amostras...")
+    n_data, n_labels = normalize_samples(data, labels)
+
+    print("Separando em treinamento e validação...")
+    (train_x, validation_x, train_y, validation_y) = train_test_split(n_data, n_labels, test_size=0.3, random_state=42)
+
+    print("Treinando rede...")
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    model_name = f"model-{timestr}"
+    train_network(train_x, train_y, validation_x, validation_y, epochs, learning_rate, batch_size, model_name)
+
+    print("Treinamento concluído!")
+    print(f"Os resultados foram salvos na pasta 'models/{model_name}'")
