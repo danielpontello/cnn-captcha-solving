@@ -1,5 +1,7 @@
-import plaidml.keras
-plaidml.keras.install_backend()
+# Descomente as linhas abaixo
+# aceleração de hardware em GPUs AMD
+#import plaidml.keras
+#plaidml.keras.install_backend()
 
 import cv2
 import glob
@@ -17,7 +19,6 @@ from keras.preprocessing.image import img_to_array
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from network_model import NetworkModel
 
-# CONSTANTES ============================================
 # fixamos a seed para manter os resultados reproduzíveis
 random.seed(71)
 
@@ -116,6 +117,7 @@ if __name__ == "__main__":
     (train_x, validation_x, train_y, validation_y) = train_test_split(n_data, n_labels, test_size=0.3, random_state=42)
 
     print("Treinando rede...")
+    # nome do arquivo com timestamp
     timestr = time.strftime("%Y%m%d-%H%M%S")
     model_name = f"model-{timestr}"
     train_network(train_x, train_y, validation_x, validation_y, epochs, learning_rate, batch_size, model_name)

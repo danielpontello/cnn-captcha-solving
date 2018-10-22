@@ -1,5 +1,7 @@
-import plaidml.keras
-plaidml.keras.install_backend()
+# Descomente as linhas abaixo
+# aceleração de hardware em GPUs AMD
+# import plaidml.keras
+# plaidml.keras.install_backend()
 
 from keras.models import Sequential
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D

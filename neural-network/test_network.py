@@ -1,5 +1,7 @@
-import plaidml.keras
-plaidml.keras.install_backend()
+# Descomente as linhas abaixo
+# aceleração de hardware em GPUs AMD
+#import plaidml.keras
+#plaidml.keras.install_backend()
 
 
 import numpy as np
