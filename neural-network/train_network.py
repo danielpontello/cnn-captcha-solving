@@ -1,7 +1,7 @@
 # Descomente as linhas abaixo
 # aceleração de hardware em GPUs AMD
-#import plaidml.keras
-#plaidml.keras.install_backend()
+import plaidml.keras
+plaidml.keras.install_backend()
 
 import cv2
 import glob
@@ -87,10 +87,13 @@ def train_network(train_x, train_y, validation_x, validation_y, epochs, learning
     csv_logger = CSVLogger(mod_path + f'results.csv', separator=";")
 
     # callback para salvar sempre o melhor modelo
-    checkpoint = ModelCheckpoint(filepath=mod_path + f'model.hdf5', 
-                monitor='val_acc', 
-                verbose=1, 
-                save_best_only=True)
+    #checkpoint = ModelCheckpoint(filepath=mod_path + f'model.hdf5', 
+    #            monitor='val_acc', 
+    #            verbose=1, 
+    #            save_best_only=True)
+
+    # callback para early stopping
+    early_stop = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0.000001, patience=4)
 
     # treinamento
     model.fit(train_x, train_y, 
@@ -98,11 +101,14 @@ def train_network(train_x, train_y, validation_x, validation_y, epochs, learning
                 batch_size=batch_size, 
                 epochs=epochs, 
                 verbose=1,
-                callbacks=[checkpoint, csv_logger])
+                callbacks=[early_stop, csv_logger])
+
+    # salva o modelo
+    model.save(mod_path + f'model.hdf5')
 
 if __name__ == "__main__":
     num_samples = 2000
-    epochs = 2
+    epochs = 256
     learning_rate = 1e-3
     batch_size = 128
     validation_split=0.66
@@ -114,7 +120,7 @@ if __name__ == "__main__":
     n_data, n_labels = normalize_samples(data, labels)
 
     print("Separando em treinamento e validação...")
-    (train_x, validation_x, train_y, validation_y) = train_test_split(n_data, n_labels, test_size=0.3, random_state=42)
+    (train_x, validation_x, train_y, validation_y) = train_test_split(n_data, n_labels, test_size=0.33, random_state=42)
 
     print("Treinando rede...")
     # nome do arquivo com timestamp

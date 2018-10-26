@@ -57,7 +57,7 @@ def load_dataset(start, end):
 
 if __name__ == "__main__":
     print("Carregando modelo...")
-    model = load_model('model.mdl')
+    model = load_model('../models/model-20181026-133514/model.hdf5')
 
     print("Carregando dataset...")
     data, labels = load_dataset(2000, 3320)
