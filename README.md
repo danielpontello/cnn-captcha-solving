@@ -49,7 +49,7 @@ num_samples = 2000          # number of samples to use on training
 epochs = 1024               # number of epochs of training
 learning_rate = 1e-3        # learning rate of the network
 batch_size = 128            # batch size
-validation_split=0.66       # the train/validation split percentage to be used
+validation_split = 0.66       # the train/validation split percentage to be used
 min_delta = 1e-6            # minimum improvement of the validation accuracy before stopping training
 patience = 10               # number of epochs without improvement before stopping training
 ```
