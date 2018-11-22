@@ -12,6 +12,7 @@ import string
 from os import listdir
 from os.path import splitext
 from keras.preprocessing.image import img_to_array
+from sklearn.preprocessing import normalize
 from sklearn.metrics import confusion_matrix
 from keras.models import load_model
 from difflib import SequenceMatcher
@@ -65,6 +66,9 @@ if __name__ == "__main__":
     y_true = []
     y_pred = []
 
+    right = 0
+    total = 0
+
     print("Efetuando testes...")
     for i in range(len(data)):
         sample = data[i]
@@ -76,9 +80,17 @@ if __name__ == "__main__":
         out = model.predict(sample)
         decoded = decode(out)
 
+        if label == decoded:
+            right += 1
+        total += 1
+
         y_true += label
         y_pred += decoded
 
     print("Calculando Matriz de Confusão...")
     conf_matrix = confusion_matrix(y_true, y_pred, labels=list(allowed_chars))
+    norm_conf_matrix = normalize(conf_matrix, norm='l1')
     np.savetxt("../results/confusion_matrix_artificial.csv", conf_matrix, delimiter = ";", fmt = "%.4f")
+    np.savetxt("../results/confusion_matrix_artificial_norm.csv", norm_conf_matrix, delimiter = ";", fmt = "%.4f")
+
+    print(f"Taxa de acerto: {right/total}%")

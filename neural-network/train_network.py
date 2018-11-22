@@ -13,7 +13,6 @@ import time
 
 import numpy as np
 from keras.optimizers import Adam, SGD
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from keras.preprocessing.image import img_to_array
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
@@ -65,7 +64,7 @@ def normalize_samples(data, labels):
     n_labels = np.array(labels)
     return n_data, n_labels
 
-def train_network(train_x, train_y, validation_x, validation_y, epochs, learning_rate, batch_size, model_name):
+def train_network(train_x, train_y, validation_x, validation_y, epochs, learning_rate, batch_size, min_delta, patience, model_name):
     '''Treina a rede neural, salvando o histórico num .csv'''
     
     # caminho para salvar os modelos e os resultados
@@ -93,7 +92,7 @@ def train_network(train_x, train_y, validation_x, validation_y, epochs, learning
     #            save_best_only=True)
 
     # callback para early stopping
-    early_stop = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0.000001, patience=4)
+    early_stop = EarlyStopping(monitor='val_loss', mode='auto', min_delta=min_delta, patience=patience)
 
     # treinamento
     model.fit(train_x, train_y, 
@@ -107,11 +106,16 @@ def train_network(train_x, train_y, validation_x, validation_y, epochs, learning
     model.save(mod_path + f'model.hdf5')
 
 if __name__ == "__main__":
+    # min_delta = 1e-6, 1e-5, 1e-4
+    # patience = 0, 5, 10
     num_samples = 2000
-    epochs = 256
+    epochs = 1024
     learning_rate = 1e-3
     batch_size = 128
     validation_split=0.66
+    min_delta = 1e-6
+    patience = 10
+
 
     print("Carregando dataset...")
     data, labels = load_dataset(num_samples)
@@ -120,13 +124,15 @@ if __name__ == "__main__":
     n_data, n_labels = normalize_samples(data, labels)
 
     print("Separando em treinamento e validação...")
-    (train_x, validation_x, train_y, validation_y) = train_test_split(n_data, n_labels, test_size=0.33, random_state=42)
+    (train_x, validation_x, train_y, validation_y) = train_test_split(n_data, n_labels, test_size=0.3, random_state=42)
 
     print("Treinando rede...")
-    # nome do arquivo com timestamp
+    # nome do arquivo com timestamp    
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    model_name = f"model-{timestr}"
-    train_network(train_x, train_y, validation_x, validation_y, epochs, learning_rate, batch_size, model_name)
+    model_name = f"model-md[{str(min_delta)}]-pt[{str(patience)}]"
+    print(f"Nome do modelo: {model_name}")
+    
+    train_network(train_x, train_y, validation_x, validation_y, epochs, learning_rate, batch_size, min_delta, patience, model_name)
 
     print("Treinamento concluído!")
     print(f"Os resultados foram salvos na pasta 'models/{model_name}'")
