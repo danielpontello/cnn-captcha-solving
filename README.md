@@ -43,7 +43,15 @@ $ python train-network.py
 
 **WARNING: This step can consume large amounts of RAM (about ~8GB for 72000 segmented images). Close any unnecessary programs before running.**
 
+You can uncomment the following lines to enable hardware acceleration on OpenCL-enabled devices (like AMD graphics cards). This can greatly speed up the training process:
+
+```python
+import plaidml.keras
+plaidml.keras.install_backend()
+```
+
 Various parameters of the network can be changed by editing this script, as shown below:
+
 ```python
 num_samples = 2000          # number of samples to use on training
 epochs = 1024               # number of epochs of training
