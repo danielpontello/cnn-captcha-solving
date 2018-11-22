@@ -1,4 +1,4 @@
-# TCC-Prototype
+# cnn-captcha-solving
 
 This repository contains our final thesis for the Computer Engineering graduation at the [National Telecommunications Institute](http://inatel.br/), titled "Evidencing CAPTCHA Vulnerabilites using Convolutional Neural Networks" (available as the 'paper.pdf' file; in Portuguese).
 
