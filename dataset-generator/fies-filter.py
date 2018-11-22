@@ -85,26 +85,4 @@ for file in files:
         cv2.imwrite(path, img)
         counts[letter] += 1
 
-
-            #letter = image[y:y+h, x:x+w]
-
-            #rgb = cv2.cvtColor(letter, cv2.COLOR_GRAY2RGB)
-            #pil_img = Image.fromarray(rgb)
-
-            #res = pytesseract.image_to_string(pil_img, config=tess_config)
-            #print(res)
-
-            #plt.imshow(rgb)
-            #plt.show()
-    
-    # The second cell is the label matrix
-    #labels = output[1]
-    # The third cell is the stat matrix
-    #stats = output[2]
-    # The fourth cell is the centroid matrix
-    #centroids = output[3]
-
-    #print(num_labels)
-    #print(labels)
-
    

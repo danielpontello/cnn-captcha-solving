@@ -1,7 +1,7 @@
 # Descomente as linhas abaixo
 # aceleração de hardware em GPUs AMD
-import plaidml.keras
-plaidml.keras.install_backend()
+# import plaidml.keras
+# plaidml.keras.install_backend()
 
 import cv2
 import glob
