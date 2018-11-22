@@ -1,6 +1,6 @@
 # cnn-captcha-solving
 
-This repository contains our final thesis for the Computer Engineering graduation at the [National Telecommunications Institute](http://inatel.br/), titled "Evidencing CAPTCHA Vulnerabilites using Convolutional Neural Networks".
+This repository contains our final work for the Computer Engineering graduation at the [National Telecommunications Institute](http://inatel.br/), titled "Evidencing CAPTCHA Vulnerabilites using Convolutional Neural Networks".
 
 ![Block diagram](https://github.com/danielpontello/cnn-captcha-solving/blob/master/results/block-diagram.png)
 
