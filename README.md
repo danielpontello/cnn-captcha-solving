@@ -67,14 +67,14 @@ The following libraries were used on this project:
 - **[Pillow](https://python-pillow.org/)**: Image creation and manipulation library.
 - **[PlaidML](https://github.com/plaidml/plaidml)**: Keras backend, used for enabling GPU acceleration on OpenCL-enabled devices
 - **[Matplotlib](https://matplotlib.org/)**: Chart plotting library
-
+- **[Memory Profiler](https://pypi.org/project/memory_profiler/)**: Memory Profiler for Python
 ## Authors
 
 ### Advisor
- - Marcelo V. C. Aragão
+ - Marcelo V. C. Aragão ([https://github.com/marcelovca90](https://github.com/marcelovca90))
 
 ### Students
 
- - Daniel S. P. Neves
+ - Daniel S. P. Neves ([https://github.com/danielpontello](https://github.com/danielpontello))
  - Fernanda C. Avelar
  - Karina V. V. Ribeiro
