@@ -1,6 +1,6 @@
 Keras==2.0.8
 pytesseract==0.1.7
-numpy==1.14.1
+numpy==1.22.0
 plaidml==0.3.4
 imutils==0.4.6
 matplotlib==2.0.0
